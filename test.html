@@ -1,0 +1,17 @@
+<button id="test-modal-btn">Open Test Modal</button>
+<div id="test-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+        <button class="close">Close</button>
+        <p>This is a test modal.</p>
+    </div>
+</div>
+
+<script>
+    document.getElementById("test-modal-btn").onclick = function() {
+        document.getElementById("test-modal").classList.add("show");
+    };
+    
+    document.querySelector("#test-modal .close").onclick = function() {
+        document.getElementById("test-modal").classList.remove("show");
+    };
+</script>

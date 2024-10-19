@@ -1,0 +1,18 @@
+[16-Sep-2024 02:28:44 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php:7
+Stack trace:
+#0 /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php(7): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'mysql')
+#1 /home/moutjkua/dash.moutjkuatministry.cloud/functions/fetch_members_stats.php(3): include('/home/moutjkua/...')
+#2 {main}
+  thrown in /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php on line 7
+[16-Sep-2024 02:29:00 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php:7
+Stack trace:
+#0 /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php(7): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'mysql')
+#1 /home/moutjkua/dash.moutjkuatministry.cloud/functions/fetch_members_stats.php(3): include('/home/moutjkua/...')
+#2 {main}
+  thrown in /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php on line 7
+[16-Sep-2024 02:30:46 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Access denied for user 'root'@'localhost' (using password: NO) in /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php:7
+Stack trace:
+#0 /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php(7): mysqli->__construct('localhost', 'root', Object(SensitiveParameterValue), 'mysql')
+#1 /home/moutjkua/dash.moutjkuatministry.cloud/functions/fetch_members_stats.php(3): include('/home/moutjkua/...')
+#2 {main}
+  thrown in /home/moutjkua/dash.moutjkuatministry.cloud/functions/db.php on line 7

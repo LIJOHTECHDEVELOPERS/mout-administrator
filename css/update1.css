@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--main-bg-color);
+    transition: background 0.3s;
+}
+
+/* Variables */
+:root {
+    --main-bg-color: #ffffff;
+    --sidebar-color: #2f4f4f;
+    --sidebar-active: #004d40;
+    --text-color: #555;
+    --main-color: #00695c;
+}
+
+/* Light Theme */
+body:not(.dark-mode) {
+    --main-bg-color: #f4f4f4;
+    --sidebar-color: #ffffff;
+    --sidebar-active: #e0f7fa;
+    --text-color: #333;
+    --main-color: #4caf50;
+}
+
+/* Dark Theme */
+body.dark-mode {
+    --main-bg-color: #212121;
+    --sidebar-color: #263238;
+    --sidebar-active: #37474f;
+    --text-color: #f4f4f4;
+    --main-color: #00bfa5;
+}
+
+.sidebar {
+    position: fixed;
+    width: 250px;
+    height: 100%;
+    background: var(--sidebar-color);
+    padding: 20px 0;
+    transition: all 0.3s ease;
+}
+
+.sidebar .brand {
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+}
+
+.sidebar .brand .text {
+    color: var(--main-color);
+    font-size: 22px;
+    font-weight: 700;
+    margin-left: 10px;
+}
+
+.sidebar ul {
+    padding-left: 30px;
+    margin-top: 40px;
+}
+
+.sidebar ul li {
+    position: relative;
+    list-style: none;
+}
+
+.sidebar ul li.active a {
+    background: var(--sidebar-active);
+    color: var(--main-color);
+}
+
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    height: 42px;
+    padding: 0 15px;
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background: var(--sidebar-active);
+    color: var(--main-color);
+}
+
+.sidebar ul li a .bx {
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+#content {
+    position: relative;
+    left: 250px;
+    width: calc(100% - 250px);
+    padding: 20px;
+    background: var(--main-bg-color);
+    transition: all 0.3s ease;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    background: var(--sidebar-color);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+nav .form-input {
+    position: relative;
+}
+
+nav .form-input input {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+nav .form-input button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+}
+
+main {
+    padding: 20px;
+    background: var(--main-bg-color);
+    transition: all 0.3s ease;
+}
+
+main .head-title h1 {
+    color: var(--text-color);
+}
+
+main .box-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+main .box-info li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sidebar-active);
+    padding: 20px;
+    border-radius: 10px;
+    color: var(--main-color);
+}
+
+main .box-info li .text h3 {
+    font-size: 28px;
+}
+
+main .box-info li i {
+    font-size: 40px;
+    margin-right: 20px;
+}
+
+/* Table */
+.table-data {
+    background: var(--sidebar-color);
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.table-data table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-data table thead {
+    background: var(--sidebar-active);
+}
+
+.table-data table th,
+.table-data table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ccc;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+    #content {
+        left: 200px;
+        width: calc(100% - 200px);
+    }
+}
+
+@media (max-width: 576px) {
+    .sidebar {
+        width: 100px;
+    }
+    #content {
+        left: 100px;
+        width: calc(100% - 100px);
+    }
+    .sidebar ul li a .text {
+        display: none;
+    }
+    .sidebar ul li a .bx {
+        margin-right: 0;
+    }
+    nav .form-input input {
+        width: 100px;
+    }
+    nav .form-input button {
+        right: 5px;
+    }
+    main .box-info {
+        flex-direction: column;
+    }
+    main .box-info li {
+        width: 100%;
+    }
+}
