@@ -1,6 +1,8 @@
 <?php
 // Assume you've already started the session and retrieved the user's role
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $userRole = $_SESSION['user_role'] ?? 'guest';
 
 // Function to check if user has required role
@@ -289,12 +291,12 @@ if (!function_exists('hasRole')) {
                   <ul class="nav nav-collapse">
                     <li>
                       <a href="#">
-                        <span class="sub-item">General reports</span>
+                        <span class="sub-item">Add report</span>
                       </a>
                     </li>
                     <li>
                       <a href="#">
-                        <span class="sub-item">individual Reports</span>
+                        <span class="sub-item">All Reports</span>
                       </a>
                     </li>
                   </ul>
