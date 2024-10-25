@@ -14,23 +14,29 @@ if (!isset($_GET['report_id'])) {
     exit();
 }
 
-$report_id = (int) $_GET['report_id'];
-
-$query = "SELECT r.*, u.name as user_name, d.name as docket_name, s.year as spiritual_year
-          FROM reports r
-          JOIN admin_users u ON r.user_id = u.id
-          JOIN dockets d ON r.docket_id = d.id
-          JOIN spiritual_years s ON r.spiritual_year_id = s.id
-          WHERE r.id = $report_id";
-
-$report_result = mysqli_query($conn, $query);
-
-if (!$report_result || mysqli_num_rows($report_result) == 0) {
-    echo "Report not found.";
-    exit();
+// Sanitization function for PDF content
+function sanitizePDFContent($content) {
+    // Decode HTML entities
+    $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    
+    // Remove HTML tags
+    $content = strip_tags($content);
+    
+    // Fix common special characters
+    $content = str_replace(
+        ['â€œ', 'â€', 'â€™', 'â€"', 'â€"', '&quot;', '&amp;', '&lt;', '&gt;', '&nbsp;'], 
+        ['"', '"', "'", '-', '-', '"', '&', '<', '>', ' '],
+        $content
+    );
+    
+    // Remove any remaining non-printable characters
+    $content = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $content);
+    
+    // Normalize spaces
+    $content = preg_replace('/\s+/', ' ', $content);
+    
+    return trim($content);
 }
-
-$report = mysqli_fetch_assoc($report_result);
 
 class PDF extends FPDF
 {
@@ -40,7 +46,16 @@ class PDF extends FPDF
     function __construct($compilerName)
     {
         parent::__construct();
-        $this->compilerName = $compilerName;
+        $this->compilerName = $this->sanitizePDFContent($compilerName);
+        $this->SetAutoPageBreak(true, 25); // Set auto page break with 25mm margin
+    }
+
+    // Internal sanitization method for the PDF class
+    protected function sanitizePDFContent($text) {
+        if (is_string($text)) {
+            return sanitizePDFContent($text);
+        }
+        return $text;
     }
 
     function Header()
@@ -65,7 +80,10 @@ class PDF extends FPDF
             $this->Ln(20);  // Add some space after the header
             $this->firstPage = false;
         } else {
-            $this->Ln(10);  // Add some space at the top of subsequent pages
+            $this->SetTextColor(128, 128, 128);
+            $this->SetFont('Helvetica', 'I', 10);
+            $this->Cell(0, 10, 'MOUT JKUAT MINISTRY - AGM Report', 0, 0, 'R');
+            $this->Ln(15);
         }
     }
 
@@ -80,9 +98,10 @@ class PDF extends FPDF
 
     function ChapterTitle($title)
     {
+        $this->CheckPageBreak();
         $this->SetFont('Helvetica', 'B', 14);
         $this->SetTextColor(0, 51, 102);  // Dark blue text
-        $this->Cell(0, 10, $title, 0, 1, 'L');
+        $this->Cell(0, 10, $this->sanitizePDFContent($title), 0, 1, 'L');
         
         // Accent line under title
         $this->SetDrawColor(255, 153, 0);  // Orange
@@ -96,7 +115,7 @@ class PDF extends FPDF
     {
         $this->SetTextColor(51, 51, 51);  // Dark gray for body text
         $this->SetFont('Helvetica', '', 11);
-        $this->MultiCell(0, 6, $content, 0, 'J');
+        $this->MultiCell(0, 6, $this->sanitizePDFContent($content), 0, 'J');
         $this->Ln(10);
     }
 
@@ -104,10 +123,10 @@ class PDF extends FPDF
     {
         $this->SetFont('Helvetica', 'B', 10);
         $this->SetTextColor(0, 51, 102);  // Dark blue for label
-        $this->Cell(50, 8, $label, 0);
+        $this->Cell(50, 8, $this->sanitizePDFContent($label), 0);
         $this->SetFont('Helvetica', '', 10);
         $this->SetTextColor(51, 51, 51);  // Dark gray for value
-        $this->Cell(0, 8, $value, 0, 1);
+        $this->Cell(0, 8, $this->sanitizePDFContent($value), 0, 1);
     }
 
     function CheckPageBreak()
@@ -118,41 +137,93 @@ class PDF extends FPDF
     }
 }
 
-$pdf = new PDF($report['user_name']);
-$pdf->AliasNbPages();
-$pdf->AddPage();
+try {
+    // Prepare and execute query with prepared statement
+    $report_id = (int) $_GET['report_id'];
+    $query = "SELECT r.*, u.name as user_name, d.name as docket_name, s.year as spiritual_year
+              FROM reports r
+              JOIN admin_users u ON r.user_id = u.id
+              JOIN dockets d ON r.docket_id = d.id
+              JOIN spiritual_years s ON r.spiritual_year_id = s.id
+              WHERE r.id = ?";
+              
+    $stmt = mysqli_prepare($conn, $query);
+    mysqli_stmt_bind_param($stmt, "i", $report_id);
+    mysqli_stmt_execute($stmt);
+    $report_result = mysqli_stmt_get_result($stmt);
 
-// Report Details
-$pdf->CreateInfoBox('Docket Served:', $report['docket_name']);
-$pdf->CreateInfoBox('Compiled By:', $report['user_name']);
-$pdf->CreateInfoBox('Spiritual Year:', $report['spiritual_year']);
-$pdf->CreateInfoBox('Status:', ucfirst($report['status']));
-$pdf->CreateInfoBox('Date Created:', date('F j, Y', strtotime($report['created_at'])));
+    if (!$report_result || mysqli_num_rows($report_result) == 0) {
+        throw new Exception("Report not found.");
+    }
 
-$pdf->Ln(10);
+    $report = mysqli_fetch_assoc($report_result);
 
-// Main content
-$sections = [
-    'Greetings' => $report['greetings'],
-    'Responsibilities' => $report['responsibilities'],
-    'Accomplishments' => $report['accomplishments'],
-    'Challenges' => $report['challenges'],
-    'Recognitions' => $report['recognitions'],
-    'Recommendations' => $report['recommendations'],
-    'Conclusion' => $report['conclusion']
-];
+    // Create PDF instance
+    $pdf = new PDF($report['user_name']);
+    $pdf->AliasNbPages();
+    $pdf->AddPage();
 
-foreach ($sections as $title => $content) {
-    $pdf->CheckPageBreak();
-    $pdf->ChapterTitle($title);
-    $pdf->CheckPageBreak();
-    $pdf->ChapterBody($content);
+    // Set default font encoding
+    $pdf->SetFont('Helvetica', '', 10);
+
+    // Report Details
+    $pdf->CreateInfoBox('Docket Served:', $report['docket_name']);
+    $pdf->CreateInfoBox('Compiled By:', $report['user_name']);
+    $pdf->CreateInfoBox('Spiritual Year:', $report['spiritual_year']);
+    $pdf->CreateInfoBox('Status:', ucfirst($report['status']));
+    $pdf->CreateInfoBox('Date Created:', date('F j, Y', strtotime($report['created_at'])));
+
+    $pdf->Ln(10);
+
+    // Main content sections
+    $sections = [
+        'Greetings' => $report['greetings'],
+        'Responsibilities' => $report['responsibilities'],
+        'Accomplishments' => $report['accomplishments'],
+        'Challenges' => $report['challenges'],
+        'Recognitions' => $report['recognitions'],
+        'Recommendations' => $report['recommendations'],
+        'Conclusion' => $report['conclusion']
+    ];
+
+    foreach ($sections as $title => $content) {
+        if (!empty(trim($content))) {  // Only show sections with content
+            $pdf->ChapterTitle($title);
+            $pdf->ChapterBody($content);
+        }
+    }
+
+    // Add a decorative element at the end
+    $pdf->SetDrawColor(0, 51, 102);  // Dark blue
+    $pdf->SetLineWidth(0.5);
+    $pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
+
+    // Generate unique filename
+    $filename = 'MOUT_JKUAT_AGM_Report_' . $report_id . '_' . date('Y-m-d') . '.pdf';
+    
+    // Set appropriate headers for PDF download
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
+
+    // Output PDF
+    $pdf->Output('D', $filename);
+
+} catch (Exception $e) {
+    // Log error (you should implement proper error logging)
+    error_log("PDF Generation Error: " . $e->getMessage());
+    
+    // Show user-friendly error message
+    echo "An error occurred while generating the PDF. Please try again later.";
+    exit();
+} finally {
+    // Clean up
+    if (isset($stmt)) {
+        mysqli_stmt_close($stmt);
+    }
+    if (isset($conn)) {
+        mysqli_close($conn);
+    }
 }
-
-// Add a decorative element at the end
-$pdf->SetDrawColor(0, 51, 102);  // Dark blue
-$pdf->SetLineWidth(0.5);
-$pdf->Line(10, $pdf->GetY(), 200, $pdf->GetY());
-
-$pdf->Output('D', 'MOUT_JKUAT_AGM_Report_' . $report['id'] . '.pdf');
 ?>

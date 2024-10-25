@@ -77,55 +77,56 @@ $report = mysqli_fetch_assoc($report_result);
     <h1>Preview Report</h1>
     
     <table class="table table-bordered">
-        <tr>
-            <th>Docket</th>
-            <td><?php echo htmlspecialchars($report['docket_name']); ?></td>
-        </tr>
-        <tr>
-            <th>Spiritual Year</th>
-            <td><?php echo htmlspecialchars($report['spiritual_year']); ?></td>
-        </tr>
-        <tr>
-            <th>Status</th>
-            <td><?php echo $report['status'] === 'completed' ? 'Completed' : 'Draft'; ?></td>
-        </tr>
-        <tr>
-            <th>Compiled By</th>
-            <td><?php echo htmlspecialchars($report['user_name']); ?></td>
-        </tr>
-        <tr>
-            <th>Date Created</th>
-            <td><?php echo date('Y-m-d H:i', strtotime($report['created_at'])); ?></td>
-        </tr>
-        <tr>
-            <th>Greetings</th>
-            <td><?php echo htmlspecialchars($report['greetings']); ?></td>
-        </tr>
-        <tr>
-            <th>Responsibilities</th>
-            <td><?php echo htmlspecialchars($report['responsibilities']); ?></td>
-        </tr>
-        <tr>
-            <th>Accomplishments</th>
-            <td><?php echo htmlspecialchars($report['accomplishments']); ?></td>
-        </tr>
-        <tr>
-            <th>Challenges</th>
-            <td><?php echo htmlspecialchars($report['challenges']); ?></td>
-        </tr>
-        <tr>
-            <th>Recognitions</th>
-            <td><?php echo htmlspecialchars($report['recognitions']); ?></td>
-        </tr>
-        <tr>
-            <th>Recommendations</th>
-            <td><?php echo htmlspecialchars($report['recommendations']); ?></td>
-        </tr>
-        <tr>
-            <th>Conclusion</th>
-            <td><?php echo htmlspecialchars($report['conclusion']); ?></td>
-        </tr>
-    </table>
+    <tr>
+        <th>Docket</th>
+        <td><?php echo htmlspecialchars($report['docket_name']); ?></td>
+    </tr>
+    <tr>
+        <th>Spiritual Year</th>
+        <td><?php echo htmlspecialchars($report['spiritual_year']); ?></td>
+    </tr>
+    <tr>
+        <th>Status</th>
+        <td><?php echo $report['status'] === 'completed' ? 'Completed' : 'Draft'; ?></td>
+    </tr>
+    <tr>
+        <th>Compiled By</th>
+        <td><?php echo htmlspecialchars($report['user_name']); ?></td>
+    </tr>
+    <tr>
+        <th>Date Created</th>
+        <td><?php echo date('Y-m-d H:i', strtotime($report['created_at'])); ?></td>
+    </tr>
+    <tr>
+        <th>Greetings</th>
+        <td><?php echo nl2br($report['greetings']); ?></td>
+    </tr>
+    <tr>
+        <th>Responsibilities</th>
+        <td><?php echo nl2br($report['responsibilities']); ?></td>
+    </tr>
+    <tr>
+        <th>Accomplishments</th>
+        <td><?php echo nl2br($report['accomplishments']); ?></td>
+    </tr>
+    <tr>
+        <th>Challenges</th>
+        <td><?php echo nl2br($report['challenges']); ?></td>
+    </tr>
+    <tr>
+        <th>Recognitions</th>
+        <td><?php echo nl2br($report['recognitions']); ?></td>
+    </tr>
+    <tr>
+        <th>Recommendations</th>
+        <td><?php echo nl2br($report['recommendations']); ?></td>
+    </tr>
+    <tr>
+        <th>Conclusion</th>
+        <td><?php echo nl2br($report['conclusion']); ?></td>
+    </tr>
+</table>
+
     
     <a href="report_list.php" class="btn btn-secondary">Back to Reports List</a>
 </div>
