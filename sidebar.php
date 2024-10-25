@@ -290,12 +290,12 @@ if (!function_exists('hasRole')) {
                 <div class="collapse" id="charts">
                   <ul class="nav nav-collapse">
                     <li>
-                      <a href="#">
+                      <a href="report_form.php">
                         <span class="sub-item">Add report</span>
                       </a>
                     </li>
                     <li>
-                      <a href="#">
+                      <a href="report_list.php">
                         <span class="sub-item">All Reports</span>
                       </a>
                     </li>

@@ -35,6 +35,13 @@ $report = mysqli_fetch_assoc($report_result);
 class PDF extends FPDF
 {
     protected $firstPage = true;
+    protected $compilerName;
+
+    function __construct($compilerName)
+    {
+        parent::__construct();
+        $this->compilerName = $compilerName;
+    }
 
     function Header()
     {
@@ -64,10 +71,11 @@ class PDF extends FPDF
 
     function Footer()
     {
-        $this->SetY(-15);
+        $this->SetY(-20);
         $this->SetFont('Helvetica', 'I', 8);
         $this->SetTextColor(128, 128, 128);  // Gray text for footer
-        $this->Cell(0, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'C');
+        $this->Cell(0, 5, 'Page ' . $this->PageNo() . '/{nb}', 0, 1, 'C');
+        $this->Cell(0, 5, 'Compiled by: ' . $this->compilerName, 0, 0, 'C');
     }
 
     function ChapterTitle($title)
@@ -110,7 +118,7 @@ class PDF extends FPDF
     }
 }
 
-$pdf = new PDF();
+$pdf = new PDF($report['user_name']);
 $pdf->AliasNbPages();
 $pdf->AddPage();
 
