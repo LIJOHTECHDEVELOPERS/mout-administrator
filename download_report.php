@@ -14,26 +14,63 @@ if (!isset($_GET['report_id'])) {
     exit();
 }
 
-// Sanitization function for PDF content
-function sanitizePDFContent($content) {
-    // Decode HTML entities
+// Enhanced HTML content processor
+function processHTMLContent($content) {
+    // First decode HTML entities
     $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-    
-    // Remove HTML tags
-    $content = strip_tags($content);
     
     // Fix common special characters
     $content = str_replace(
-        ['â€œ', 'â€', 'â€™', 'â€"', 'â€"', '&quot;', '&amp;', '&lt;', '&gt;', '&nbsp;'], 
+        ['â€œ', 'â€', 'â€™', 'â€"', 'â€"', '&quot;', '&amp;', '&lt;', '&gt;', '&nbsp;'],
         ['"', '"', "'", '-', '-', '"', '&', '<', '>', ' '],
         $content
     );
     
-    // Remove any remaining non-printable characters
-    $content = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $content);
+    // Convert HTML lists to formatted text
+    $content = preg_replace('/<ol[^>]*>/', "\n", $content);
+    $content = preg_replace('/<ul[^>]*>/', "\n", $content);
+    $content = preg_replace('/<\/ol>/', "\n", $content);
+    $content = preg_replace('/<\/ul>/', "\n", $content);
     
-    // Normalize spaces
-    $content = preg_replace('/\s+/', ' ', $content);
+    // Convert list items to bullet points
+    $lines = explode("\n", $content);
+    $processed_lines = [];
+    $list_number = 0;
+    $in_list = false;
+    
+    foreach ($lines as $line) {
+        if (preg_match('/<li[^>]*>(.*?)<\/li>/', $line, $matches)) {
+            if (!$in_list) {
+                $list_number = 1;
+                $in_list = true;
+            }
+            // Convert list item to proper format
+            $line_content = strip_tags($matches[1]);
+            $processed_lines[] = "   " . $list_number . ". " . trim($line_content);
+            $list_number++;
+        } else {
+            // Handle paragraphs and other elements
+            $line = strip_tags($line, '<p><br><strong><em>');
+            if (!empty(trim($line))) {
+                $in_list = false;
+                $processed_lines[] = trim($line);
+            }
+        }
+    }
+    
+    $content = implode("\n", $processed_lines);
+    
+    // Convert <br> and </p> tags to new lines
+    $content = preg_replace('/<br[^>]*>/', "\n", $content);
+    $content = preg_replace('/<\/p>/', "\n\n", $content);
+    
+    // Remove remaining HTML tags but maintain line breaks
+    $content = strip_tags($content);
+    
+    // Normalize spaces while preserving intentional line breaks
+    $content = preg_replace('/[ \t]+/', ' ', $content);
+    $content = preg_replace('/\n\s+/', "\n", $content);
+    $content = preg_replace('/\n{3,}/', "\n\n", $content);
     
     return trim($content);
 }
@@ -42,20 +79,15 @@ class PDF extends FPDF
 {
     protected $firstPage = true;
     protected $compilerName;
+    protected $leftMargin = 20;
+    protected $lineHeight = 6;
 
     function __construct($compilerName)
     {
         parent::__construct();
-        $this->compilerName = $this->sanitizePDFContent($compilerName);
-        $this->SetAutoPageBreak(true, 25); // Set auto page break with 25mm margin
-    }
-
-    // Internal sanitization method for the PDF class
-    protected function sanitizePDFContent($text) {
-        if (is_string($text)) {
-            return sanitizePDFContent($text);
-        }
-        return $text;
+        $this->compilerName = processHTMLContent($compilerName);
+        $this->SetAutoPageBreak(true, 25);
+        $this->SetMargins($this->leftMargin, 20, 20);
     }
 
     function Header()
@@ -101,7 +133,8 @@ class PDF extends FPDF
         $this->CheckPageBreak();
         $this->SetFont('Helvetica', 'B', 14);
         $this->SetTextColor(0, 51, 102);  // Dark blue text
-        $this->Cell(0, 10, $this->sanitizePDFContent($title), 0, 1, 'L');
+        $title = processHTMLContent($title);
+        $this->Cell(0, 10, $title, 0, 1, 'L');
         
         // Accent line under title
         $this->SetDrawColor(255, 153, 0);  // Orange
@@ -113,20 +146,47 @@ class PDF extends FPDF
 
     function ChapterBody($content)
     {
-        $this->SetTextColor(51, 51, 51);  // Dark gray for body text
+        $this->SetTextColor(51, 51, 51);
         $this->SetFont('Helvetica', '', 11);
-        $this->MultiCell(0, 6, $this->sanitizePDFContent($content), 0, 'J');
-        $this->Ln(10);
+        
+        // Process the content
+        $content = processHTMLContent($content);
+        $paragraphs = explode("\n", $content);
+        
+        foreach ($paragraphs as $paragraph) {
+            $paragraph = trim($paragraph);
+            if (empty($paragraph)) {
+                $this->Ln($this->lineHeight);
+                continue;
+            }
+            
+            // Check if this is a list item
+            if (preg_match('/^\s*(\d+)\.\s(.*)/', $paragraph, $matches)) {
+                // This is a numbered list item
+                $this->SetX($this->leftMargin + 5);
+                $this->MultiCell(0, $this->lineHeight, $paragraph, 0, 'L');
+            } else {
+                // Regular paragraph
+                $this->SetX($this->leftMargin);
+                $this->MultiCell(0, $this->lineHeight, $paragraph, 0, 'J');
+            }
+            
+            $this->Ln($this->lineHeight/2);
+        }
+        
+        $this->Ln($this->lineHeight);
     }
 
     function CreateInfoBox($label, $value)
     {
         $this->SetFont('Helvetica', 'B', 10);
         $this->SetTextColor(0, 51, 102);  // Dark blue for label
-        $this->Cell(50, 8, $this->sanitizePDFContent($label), 0);
+        $label = processHTMLContent($label);
+        $this->Cell(50, 8, $label, 0);
         $this->SetFont('Helvetica', '', 10);
         $this->SetTextColor(51, 51, 51);  // Dark gray for value
-        $this->Cell(0, 8, $this->sanitizePDFContent($value), 0, 1);
+        $value = processHTMLContent($value);
+        $this->Cell(0, 8, $value, 0, 1);
     }
 
     function CheckPageBreak()
@@ -134,6 +194,12 @@ class PDF extends FPDF
         if ($this->GetY() > 250) {  // Adjust this value as needed
             $this->AddPage();
         }
+    }
+
+    function WriteHTML($html)
+    {
+        $content = processHTMLContent($html);
+        $this->Write($this->lineHeight, $content);
     }
 }
 
@@ -175,7 +241,7 @@ try {
 
     $pdf->Ln(10);
 
-    // Main content sections
+    // Main content sections with improved formatting
     $sections = [
         'Greetings' => $report['greetings'],
         'Responsibilities' => $report['responsibilities'],
@@ -187,7 +253,7 @@ try {
     ];
 
     foreach ($sections as $title => $content) {
-        if (!empty(trim($content))) {  // Only show sections with content
+        if (!empty(trim($content))) {
             $pdf->ChapterTitle($title);
             $pdf->ChapterBody($content);
         }
@@ -211,10 +277,7 @@ try {
     $pdf->Output('D', $filename);
 
 } catch (Exception $e) {
-    // Log error (you should implement proper error logging)
     error_log("PDF Generation Error: " . $e->getMessage());
-    
-    // Show user-friendly error message
     echo "An error occurred while generating the PDF. Please try again later.";
     exit();
 } finally {
